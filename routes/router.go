@@ -47,11 +47,59 @@ func SetupRoutes(devAccount *schemas.AccountAPIData) *fiber.App {
 			return c.Status(fiber.StatusBadRequest).SendString("error finding artist")
 		}
 
+		log.Println(artist)
+
 		topTracks, err := spotifyServices.GetPopularTracksFromArtist(artist.SpotifyID, devAccount.AccessToken)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).SendString("error getting most popular tracks")
 		}
 		return c.JSON(topTracks)
+	})
+
+	app.Get("/getSongLyrics", func(c *fiber.Ctx) error {
+		log.Println("/getSongLyrics api call")
+		tracksQuery := new(schemas.SearchTrackInput)
+		err := json.Unmarshal(c.Body(), &tracksQuery)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString("bad input")
+		}
+
+		track, err := spotifyServices.GetTrackInfoFromName(tracksQuery, devAccount.AccessToken)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString("error finding track")
+		}
+
+		lyrics, err := spotifyServices.GetLyricsForTrack(track)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString("error getting track lyrics")
+		}
+
+		return c.JSON(lyrics)
+	})
+
+	app.Get("/userTopTracks", func(c *fiber.Ctx) error {
+		log.Println("/userTopTracks api call")
+		userToken := new(schemas.LoginUser)
+		err := json.Unmarshal(c.Body(), &userToken)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString("bad input")
+		}
+
+		lyricsList := make([]schemas.Lyrics, 0)
+		tracks, err := spotifyServices.GetTopTrackInfoForUser(userToken, devAccount.AccessToken)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString("error finding track")
+		}
+
+		for _, track := range tracks.Tracks {
+			lyrics, err := spotifyServices.GetLyricsForTrack(&track)
+			if err != nil {
+				return c.Status(fiber.StatusBadRequest).SendString("error getting track lyrics")
+			}
+			lyricsList = append(lyricsList, *lyrics)
+		}
+
+		return c.JSON(lyricsList)
 	})
 
 	return app

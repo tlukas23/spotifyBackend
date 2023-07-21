@@ -62,6 +62,7 @@ func MakeHttpQuery(method string, urlEndpoint string, params map[string]string, 
 	if err != nil {
 		return nil, err
 	}
+
 	response.Body.Close()
 	return body, nil
 }
