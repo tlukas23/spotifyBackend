@@ -9,7 +9,7 @@ type SearchTrackInput struct {
 	ArtistName string `json:"artist_name"`
 }
 
-type LoginUser struct {
+type UserInfo struct {
 	AuthToken string `json:"auth_token"`
 }
 

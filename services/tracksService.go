@@ -37,13 +37,13 @@ func GetTrackInfoFromName(trackInput *schemas.SearchTrackInput, bearerToken stri
 	return &tracks.TrackItems.Tracks[0], nil
 }
 
-func GetTopTrackInfoForUser(input *schemas.LoginUser, bearerToken string) (*schemas.TrackItems, error) {
+func GetTopTrackInfoForUser(userToken string) (*schemas.TrackItems, error) {
 	tracks := &schemas.TrackItems{}
 	params := make(map[string]string, 0)
-	params["time_range"] = "medium_term"
+	params["time_range"] = "long_term"
 	params["limit"] = "10"
 	headers := make(map[string]string, 0)
-	headers["Authorization"] = "Bearer " + input.AuthToken
+	headers["Authorization"] = "Bearer " + userToken
 
 	body, err := spotifyRequest.MakeHttpQuery("GET", "https://api.spotify.com/v1/me/top/tracks",
 		params, headers)
@@ -52,6 +52,7 @@ func GetTopTrackInfoForUser(input *schemas.LoginUser, bearerToken string) (*sche
 		return nil, err
 	}
 
+	log.Println(string(body))
 	err = json.Unmarshal(body, &tracks)
 	if err != nil {
 		log.Println(err)
